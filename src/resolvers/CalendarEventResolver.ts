@@ -1,7 +1,15 @@
-import { Resolver, Query, Arg } from 'type-graphql';
+import { Resolver, Query, Arg, registerEnumType } from 'type-graphql';
 import { Event, JCal } from 'ical.js';
 import { CalendarEvent, ICalendarEvent } from './CalendarEvent';
 import { getCalendars } from '../calendars';
+
+enum Order {
+  ASC = 'ASC',
+  DESC = 'DESC',
+};
+registerEnumType(Order, { name: 'Order' });
+
+const MAX_INTERVAL = 1000 * 60 * 60 * 24 * 370;
 
 function filterEvent(e: Event) {
   const allProperies = <JCal>e.component.jCal[1];
@@ -15,11 +23,14 @@ export class CalendarEventResolver {
   async events(
     @Arg('before', () => Date) before: Date,
     @Arg('after', () => Date) after: Date,
-    @Arg('take', { nullable: true, defaultValue: 100 }) take: number,
+    @Arg('order', () => Order, { defaultValue: Order.ASC }) order: Order = Order.ASC,
+    @Arg('skip', { nullable: true, defaultValue: 0 }) skip: number = 0,
+    @Arg('take', { nullable: true, defaultValue: 100 }) take: number = 100,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
   ): Promise<CalendarEvent[]> {
     if (before < after) throw new Error(`Before must be after after.`);
     if (take < 1 || take > 1000) throw new Error(`Must take between 1 and 1000 events (default 100).`);
+    if (before.getTime() - after.getTime() > MAX_INTERVAL) throw new Error(`Timespan is too long.`);
 
     const calendars = calendarIds && calendarIds.length > 0
       ? getCalendars().filter((cal) => calendarIds.includes(cal.id))
@@ -51,6 +62,8 @@ export class CalendarEventResolver {
           })),
         ];
       })
-      .reduce((accum, a) => [...accum, ...a], []);
+      .reduce((accum, a) => [...accum, ...a], [])
+      .sort((a, b) => a.start.getTime() - b.start.getTime() * (order === Order.ASC ? 1 : -1))
+      .slice(skip, skip + take);
   }
 }

@@ -24,8 +24,12 @@ function getCalendarInfoFromEnv(): CalendarInfo[] {
 }
 
 async function fetchCalendarEvents(url: string): Promise<IcalExpander> {
-  const resp = await fetch(url);
-  return new IcalExpander({ ics: await resp.text() });
+  try {
+    const resp = await fetch(url);
+    return new IcalExpander({ ics: await resp.text() });
+  } catch (ex) {
+    return new IcalExpander({ ics: '' });
+  }
 }
 
 let calendars: Calendar[] = [];
