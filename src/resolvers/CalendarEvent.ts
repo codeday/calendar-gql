@@ -1,4 +1,5 @@
-import { ObjectType, Field } from 'type-graphql';
+import { ObjectType, Field, ID } from 'type-graphql';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 @ObjectType()
 export class CalendarEvent {
@@ -8,7 +9,7 @@ export class CalendarEvent {
   @Field(() => String)
   calendarName: string;
 
-  @Field(() => String)
+  @Field(() => ID)
   id: string;
 
   @Field(() => Date)
@@ -25,6 +26,9 @@ export class CalendarEvent {
 
   @Field(() => String)
   location: string;
+
+  @Field(() => GraphQLJSONObject)
+  metadata: Record<string, unknown>
 }
 
 export type ICalendarEvent = CalendarEvent
