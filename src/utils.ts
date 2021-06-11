@@ -13,7 +13,7 @@ registerEnumType(Format, { name: 'Format' });
 function stripHtml(htmlString: string): string {
   return htmlString
     .replace(/<br[^>/]*\/?>/g, `\n`)
-    .replace(`&nbsp;`, ' ')
+    .replace(/&nbsp;/g, ' ')
     .replace(/<[^>]*>/g, '');
 }
 
