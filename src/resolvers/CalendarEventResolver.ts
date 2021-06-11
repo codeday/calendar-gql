@@ -1,6 +1,5 @@
 import {
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-  Resolver, Query, Arg, registerEnumType, Int, ID,
+  Resolver, Query, Arg, registerEnumType, ID,
 } from 'type-graphql';
 import { Event, JCal, OccuranceDetails } from 'ical.js';
 import { CalendarEvent, ICalendarEvent } from './CalendarEvent';
@@ -88,8 +87,8 @@ export class CalendarEventResolver {
     @Arg('after', () => Date) after: Date,
       @Arg('order', () => Order, { defaultValue: Order.ASC }) order: Order = Order.ASC,
       @Arg('format', () => Format, { defaultValue: Format.HTML }) format: Format = Format.HTML,
-      @Arg('skip', () => Int, { nullable: true, defaultValue: 0 }) skip = 0,
-      @Arg('take', () => Int, { nullable: true, defaultValue: 100 }) take = 100,
+      @Arg('skip', () => Number, { nullable: true, defaultValue: 0 }) skip = 0,
+      @Arg('take', () => Number, { nullable: true, defaultValue: 100 }) take = 100,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
   ): Promise<CalendarEvent[]> {
     if (before < after) throw new Error(`Before must be after after.`);
