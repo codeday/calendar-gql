@@ -14,7 +14,7 @@ declare module 'ical-expander' {
   export default class IcalExpander {
     constructor(args: IcalExpanderArgs);
 
-    between(after: Date, before: Date): IcalExpanderResult;
+    between(after?: Date, before?: Date): IcalExpanderResult;
 
     before(before: Date): IcalExpanderResult;
 

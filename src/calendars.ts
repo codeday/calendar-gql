@@ -23,23 +23,24 @@ function getCalendarInfoFromEnv(): CalendarInfo[] {
     }));
 }
 
-async function fetchCalendarEvents(url: string): Promise<IcalExpander> {
+async function fetchCalendarEvents(url: string): Promise<IcalExpander | undefined> {
   try {
     const resp = await fetch(url);
     return new IcalExpander({ ics: await resp.text() });
   } catch (ex) {
-    return new IcalExpander({ ics: '' });
+    return undefined;
   }
 }
 
 let calendars: Calendar[] = [];
 
 export async function updateCalendars(): Promise<void> {
-  calendars = await Promise.all(getCalendarInfoFromEnv()
+  const maybeCalendars = await Promise.all(getCalendarInfoFromEnv()
     .map(async (info) => ({
       ...info,
       events: await fetchCalendarEvents(info.url),
     })));
+  calendars = <Calendar[]> maybeCalendars.filter(({ events }) => typeof events !== 'undefined');
 }
 
 export function startUpdateCalendars(): void {
