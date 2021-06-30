@@ -60,7 +60,7 @@ async function notifySubscribersForEvent(event: PartialCalendarEvent): Promise<v
 async function checkForNotifications(): Promise<void> {
   const soonEvents = calendarsToEvents(
     getCalendars(),
-    DateTime.now().minus({ days: 30, minutes: 15 }).toJSDate(),
+    DateTime.now().minus({ minutes: 15 }).toJSDate(),
     DateTime.now().plus({ minutes: 15 }).toJSDate(),
   );
 
