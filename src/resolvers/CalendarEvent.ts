@@ -1,5 +1,6 @@
 import { ObjectType, Field, ID } from 'type-graphql';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import config from '../config';
 
 @ObjectType()
 export class CalendarEvent {
@@ -29,6 +30,13 @@ export class CalendarEvent {
 
   @Field(() => GraphQLJSONObject)
   metadata: Record<string, unknown>
+
+  @Field(() => Number)
+  async subscriberCount(): Promise<number> {
+    return config.prisma.subscription.count({
+      where: { calendarId: this.calendarId, eventId: this.id },
+    });
+  }
 }
 
 export type ICalendarEvent = CalendarEvent

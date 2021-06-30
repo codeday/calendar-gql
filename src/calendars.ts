@@ -1,6 +1,8 @@
 /* eslint-disable node/no-process-env */
 import fetch from 'node-fetch';
+import { Event, JCal, OccuranceDetails } from 'ical.js';
 import IcalExpander from 'ical-expander';
+import { ICalendarEvent } from './resolvers/CalendarEvent';
 
 interface CalendarInfo {
   id: string
@@ -10,6 +12,56 @@ interface CalendarInfo {
 
 export interface Calendar extends CalendarInfo {
   events: IcalExpander
+}
+
+export type PartialCalendarEvent = Omit<ICalendarEvent, 'metadata' | 'subscriberCount'>;
+
+function filterEvent(e: Event) {
+  const allProperies = <JCal>e.component.jCal[1];
+  const visibility = allProperies.filter((prop) => (<JCal>prop)[0] === 'class')[0] || null;
+  return visibility && (<JCal>visibility)[3] === 'PUBLIC';
+}
+
+function getOccuranceId(o: OccuranceDetails): string {
+  return `${o.item.uid.replace(/@.*/g, '')}.${o.startDate.toUnixTime()}`;
+}
+
+function icsEventToCalendarEvent(c: Calendar, e: Event): PartialCalendarEvent {
+  return {
+    calendarId: c.id,
+    calendarName: c.name,
+    id: e.uid.replace(/@.*/g, ''),
+    start: e.startDate.toJSDate(),
+    end: e.endDate.toJSDate(),
+    title: e.summary,
+    location: e.location,
+    description: e.description,
+  };
+}
+
+function icsOccuranceToCalendarEvent(c: Calendar, o: OccuranceDetails): PartialCalendarEvent {
+  return {
+    calendarId: c.id,
+    calendarName: c.name,
+    id: getOccuranceId(o),
+    start: o.startDate.toJSDate(),
+    end: o.endDate.toJSDate(),
+    title: o.item.summary,
+    location: o.item.location,
+    description: o.item.description,
+  };
+}
+
+export function calendarsToEvents(calendars: Calendar[], after?: Date, before?: Date): PartialCalendarEvent[] {
+  return calendars
+    .map((c) => {
+      const { events, occurrences } = c.events.between(after, before);
+      return [
+        ...events.filter(filterEvent).map((e) => icsEventToCalendarEvent(c, e)),
+        ...occurrences.filter((o) => filterEvent(o.item)).map((o) => icsOccuranceToCalendarEvent(c, o)),
+      ];
+    })
+    .reduce((accum, a) => [...accum, ...a], []);
 }
 
 function getCalendarInfoFromEnv(): CalendarInfo[] {

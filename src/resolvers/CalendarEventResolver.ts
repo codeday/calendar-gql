@@ -1,10 +1,13 @@
 import {
-  Resolver, Query, Arg, registerEnumType, ID,
+  Resolver, Query, Arg, registerEnumType, ID, Mutation,
 } from 'type-graphql';
-import { Event, JCal, OccuranceDetails } from 'ical.js';
-import { CalendarEvent, ICalendarEvent } from './CalendarEvent';
-import { Calendar, getCalendars } from '../calendars';
+import emailValid from 'email-validator';
+import phone from 'phone';
+import { DestinationType } from '@prisma/client';
+import { CalendarEvent } from './CalendarEvent';
+import { calendarsToEvents, getCalendars } from '../calendars';
 import { Format, formatDescription } from '../utils';
+import config from '../config';
 
 enum Order {
   ASC = 'ASC',
@@ -12,57 +15,7 @@ enum Order {
 }
 registerEnumType(Order, { name: 'Order' });
 
-type PartialCalendarEvent = Omit<ICalendarEvent, 'metadata'>;
-
 const MAX_INTERVAL = 1000 * 60 * 60 * 24 * 370;
-
-function filterEvent(e: Event) {
-  const allProperies = <JCal>e.component.jCal[1];
-  const visibility = allProperies.filter((prop) => (<JCal>prop)[0] === 'class')[0] || null;
-  return visibility && (<JCal>visibility)[3] === 'PUBLIC';
-}
-
-function getOccuranceId(o: OccuranceDetails): string {
-  return `${o.item.uid.replace(/@.*/g, '')}.${o.startDate.toUnixTime()}`;
-}
-
-function icsEventToCalendarEvent(c: Calendar, e: Event): PartialCalendarEvent {
-  return {
-    calendarId: c.id,
-    calendarName: c.name,
-    id: e.uid.replace(/@.*/g, ''),
-    start: e.startDate.toJSDate(),
-    end: e.endDate.toJSDate(),
-    title: e.summary,
-    location: e.location,
-    description: e.description,
-  };
-}
-
-function icsOccuranceToCalendarEvent(c: Calendar, o: OccuranceDetails): PartialCalendarEvent {
-  return {
-    calendarId: c.id,
-    calendarName: c.name,
-    id: getOccuranceId(o),
-    start: o.startDate.toJSDate(),
-    end: o.endDate.toJSDate(),
-    title: o.item.summary,
-    location: o.item.location,
-    description: o.item.description,
-  };
-}
-
-function calendarsToEvents(calendars: Calendar[], after?: Date, before?: Date): PartialCalendarEvent[] {
-  return calendars
-    .map((c) => {
-      const { events, occurrences } = c.events.between(after, before);
-      return [
-        ...events.filter(filterEvent).map((e) => icsEventToCalendarEvent(c, e)),
-        ...occurrences.filter((o) => filterEvent(o.item)).map((o) => icsOccuranceToCalendarEvent(c, o)),
-      ];
-    })
-    .reduce((accum, a) => [...accum, ...a], []);
-}
 
 @Resolver(CalendarEvent)
 export class CalendarEventResolver {
@@ -71,7 +24,7 @@ export class CalendarEventResolver {
     @Arg('id', () => ID) id: string,
       @Arg('format', () => Format, { defaultValue: Format.HTML }) format: Format = Format.HTML,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
-  ): Promise<CalendarEvent | undefined> {
+  ): Promise<Omit<CalendarEvent, 'subscriberCount'> | undefined> {
     const calendars = calendarIds && calendarIds.length > 0
       ? getCalendars().filter((cal) => calendarIds.includes(cal.id))
       : getCalendars();
@@ -90,7 +43,7 @@ export class CalendarEventResolver {
       @Arg('skip', () => Number, { nullable: true, defaultValue: 0 }) skip = 0,
       @Arg('take', () => Number, { nullable: true, defaultValue: 100 }) take = 100,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
-  ): Promise<CalendarEvent[]> {
+  ): Promise<Omit<CalendarEvent, 'subscriberCount'>[]> {
     if (before < after) throw new Error(`Before must be after after.`);
     if (take < 1 || take > 1000) throw new Error(`Must take between 1 and 1000 events (default 100).`);
     if (before.getTime() - after.getTime() > MAX_INTERVAL) throw new Error(`Timespan is too long.`);
@@ -103,5 +56,32 @@ export class CalendarEventResolver {
       .sort((a, b) => a.start.getTime() - b.start.getTime() * (order === Order.ASC ? 1 : -1))
       .slice(skip, skip + take)
       .map(({ description, ...rest }) => ({ ...rest, ...formatDescription(description, format) }));
+  }
+
+  @Mutation(() => Boolean)
+  async subscribe(
+    @Arg('calendarId', () => String) calendarId: string,
+    @Arg('eventId', () => String) eventId: string,
+    @Arg('destination', () => String) destination: string,
+  ): Promise<boolean> {
+    let type: DestinationType | undefined;
+    const phoneDestination = phone(destination, '', true)[0] || null;
+    if (emailValid.validate(destination)) type = DestinationType.Email;
+    else if (phoneDestination) type = DestinationType.Phone;
+
+    if (!type) throw Error('Not a valid email or phone number.');
+
+    await config.prisma.subscription.create({
+      data: {
+        calendarId,
+        eventId,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        destination: type === DestinationType.Phone ? phoneDestination! : destination,
+        destinationType: type,
+        sent: false,
+      },
+    });
+
+    return true;
   }
 }

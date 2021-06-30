@@ -7,16 +7,20 @@
   "scripts": {
     "start": "node dist",
     "clean": "rm -rf dist",
-    "build": "npm -s run clean && npx tsc",
+    "prisma": "prisma format && prisma generate",
+    "build": "npm -s run clean && yarn run prisma && tsc",
     "dev": "ts-node-dev --no-notify --respawn --transpile-only src",
     "debug": "ts-node-dev --no-notify --respawn src"
   },
   "dependencies": {
     "@codeday/eslint-config-typescript": "^2.1.7",
+    "@prisma/client": "2.26.0",
+    "@types/email-validator": "^1.0.6",
     "apollo-server": "^2.16.1",
     "apollo-server-express": "^2.16.1",
     "class-validator": "^0.12.2",
     "dotenv": "^8.2.0",
+    "email-validator": "^2.0.4",
     "express": "^4.17.1",
     "front-matter": "^4.0.2",
     "graphql": "^15.3.0",
@@ -24,20 +28,28 @@
     "html-entities": "^2.3.2",
     "ical-expander": "^3.0.0",
     "ical.js": "^1.4.0",
+    "luxon": "^1.27.0",
     "marked": "^2.0.7",
     "node-fetch": "^2.6.0",
+    "nodemailer": "^6.6.2",
+    "phone": "^2.4.21",
+    "prisma": "2.26.0",
     "reflect-metadata": "^0.1.13",
+    "twilio": "^3.65.0",
     "type-graphql": "^1.0.0-rc.3",
     "typedi": "^0.8.0"
   },
   "devDependencies": {
     "@codeday/eslint-typescript-config": "^2.0.1",
+    "@types/luxon": "^1.27.0",
     "@types/marked": "^2.0.3",
     "@types/node": "^14.0.27",
     "@types/node-fetch": "^2.5.7",
+    "@types/nodemailer": "^6.4.2",
+    "@types/phone": "^2.4.1",
     "eslint": "^7.6.0",
     "ts-node": "^8.10.2",
     "ts-node-dev": "^1.0.0-pre.56",
-    "typescript": "^3.9.7"
+    "typescript": "^4.3.4"
   }
 }
