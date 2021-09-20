@@ -43,14 +43,15 @@ export class CalendarEventResolver {
       @Arg('skip', () => Number, { nullable: true, defaultValue: 0 }) skip = 0,
       @Arg('take', () => Number, { nullable: true, defaultValue: 100 }) take = 100,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
+    @Arg('exceptCalendars', () => [String], { nullable: true }) exceptCalendarIds?: string[],
   ): Promise<Omit<CalendarEvent, 'subscriberCount'>[]> {
     if (before < after) throw new Error(`Before must be after after.`);
     if (take < 1 || take > 1000) throw new Error(`Must take between 1 and 1000 events (default 100).`);
     if (before.getTime() - after.getTime() > MAX_INTERVAL) throw new Error(`Timespan is too long.`);
 
-    const calendars = calendarIds && calendarIds.length > 0
-      ? getCalendars().filter((cal) => calendarIds.includes(cal.id))
-      : getCalendars();
+    const calendars = getCalendars()
+      .filter((cal) => !calendarIds || calendarIds.includes(cal.id))
+      .filter((cal) => !exceptCalendarIds || !exceptCalendarIds.includes(cal.id));
 
     return calendarsToEvents(calendars, after, before)
       .sort((a, b) => a.start.getTime() - b.start.getTime() * (order === Order.ASC ? 1 : -1))
