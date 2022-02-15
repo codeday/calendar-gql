@@ -9,21 +9,25 @@ const emailer = nodemailer.createTransport(config.email);
 const phoneCaller = twilio(config.twilio.accountSid, config.twilio.authToken);
 
 async function notifyPhone(subscription: Subscription, event: PartialCalendarEvent): Promise<void> {
-  await phoneCaller.messages.create({
-    from: config.twilio.phone,
-    to: subscription.destination,
-    body: `"${event.title}" starts soon. ${event.location || ''} (You subscribed @ CodeDay.)`,
-  });
+  try {
+    await phoneCaller.messages.create({
+      from: config.twilio.phone,
+      to: subscription.destination,
+      body: `"${event.title}" starts soon. ${event.location || ''} (You subscribed @ CodeDay.)`,
+    });
+  } catch (ex) {}
 }
 
 async function notifyEmail(subscription: Subscription, event: PartialCalendarEvent): Promise<void> {
-  await emailer.sendMail({
-    from: config.email.from,
-    to: subscription.destination,
-    subject: `Starting: ${event.title}`,
-    text: `The event "${event.title}" starts soon. ${event.location || ''}`
-          + `\n(You subscribed to be notified when this event started.)`,
-  });
+  try {
+    await emailer.sendMail({
+      from: config.email.from,
+      to: subscription.destination,
+      subject: `Starting: ${event.title}`,
+      text: `The event "${event.title}" starts soon. ${event.location || ''}`
+            + `\n(You subscribed to be notified when this event started.)`,
+    });
+  } catch (ex) {}
 }
 
 async function notifySubscribersForEvent(event: PartialCalendarEvent): Promise<void> {
