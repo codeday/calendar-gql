@@ -1,13 +1,9 @@
-# fly.toml file generated for codeday-calendar-gql on 2021-11-17T10:22:26-05:00
+# fly.toml file generated for codeday-calendar-gql on 2023-05-24T10:08:56-07:00
 
 app = "codeday-calendar-gql"
-
 kill_signal = "SIGINT"
 kill_timeout = 5
-processes = []
-
-[env]
+primary_region = "sea"
 
 [experimental]
-  allowed_public_ports = []
   auto_rollback = true
