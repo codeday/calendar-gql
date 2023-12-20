@@ -33,9 +33,10 @@ export class CalendarEvent {
 
   @Field(() => Number)
   async subscriberCount(): Promise<number> {
-    return config.prisma.subscription.count({
+    return (await config.prisma.subscription.findMany({
       where: { calendarId: this.calendarId, eventId: this.id },
-    });
+      select: { eventId: true },
+    })).length;
   }
 }
 

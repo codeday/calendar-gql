@@ -13,4 +13,5 @@ export default async function server(): Promise<void> {
 
   // eslint-disable-next-line no-console
   console.log(`Server ready at ${url}`);
+  console.log(`Notifications will be sent from ${config.twilio.phone}`);
 }

@@ -128,7 +128,7 @@ export function formatDescription(
         },
       );
     return {
-      metadata: <Record<string, unknown>>attributes,
+      metadata: <Record<string, unknown>>attributes || {},
       description: format === Format.DISCORD ? decode(rendered) : rendered,
     };
   } catch (ex) {
