@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:16.5-alpine
 
 ENV NODE_ENV=development
 RUN mkdir /app
@@ -10,7 +10,7 @@ COPY . /app
 RUN yarn run build
 RUN rm -rf node_modules/ src/
 
-FROM node:16-alpine
+FROM node:16.5-alpine
 ENV NODE_ENV=production
 COPY --from=0 /app /app
 WORKDIR /app

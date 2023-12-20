@@ -18,6 +18,7 @@ model Subscription {
   destination     String
   destinationType DestinationType
   sent            Boolean
+  sentFinal       Boolean @default(false)
 
   @@id([calendarId, eventId, destination, destinationType])
 }
