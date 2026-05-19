@@ -9,6 +9,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "plugins": [],
+    "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types",
       "src/@types",
