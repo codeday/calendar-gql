@@ -4,7 +4,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 enum DestinationType {
@@ -18,7 +19,7 @@ model Subscription {
   destination     String
   destinationType DestinationType
   sent            Boolean
-  sentFinal       Boolean @default(false)
+  sentFinal       Boolean         @default(false)
 
   @@id([calendarId, eventId, destination, destinationType])
 }
