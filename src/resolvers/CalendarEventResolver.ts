@@ -24,7 +24,7 @@ export class CalendarEventResolver {
     @Arg('id', () => ID) id: string,
       @Arg('format', () => Format, { defaultValue: Format.HTML }) format: Format = Format.HTML,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
-  ): Promise<Omit<CalendarEvent, 'subscriberCount'> | undefined> {
+  ): Promise<Omit<CalendarEvent, 'subscriberCount' | 'getDescription' | 'getLocation'> | undefined> {
     const calendars = calendarIds && calendarIds.length > 0
       ? getCalendars().filter((cal) => calendarIds.includes(cal.id))
       : getCalendars();
@@ -44,7 +44,7 @@ export class CalendarEventResolver {
       @Arg('take', () => Number, { nullable: true, defaultValue: 100 }) take = 100,
     @Arg('calendars', () => [String], { nullable: true }) calendarIds?: string[],
     @Arg('exceptCalendars', () => [String], { nullable: true }) exceptCalendarIds?: string[],
-  ): Promise<Omit<CalendarEvent, 'subscriberCount'>[]> {
+  ): Promise<Omit<CalendarEvent, 'subscriberCount' | 'getDescription' | 'getLocation'>[]> {
     if (before < after) throw new Error(`Before must be after after.`);
     if (take < 1 || take > 1000) throw new Error(`Must take between 1 and 1000 events (default 100).`);
     if (before.getTime() - after.getTime() > MAX_INTERVAL) throw new Error(`Timespan is too long.`);

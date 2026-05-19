@@ -14,7 +14,7 @@ export interface Calendar extends CalendarInfo {
   events: IcalExpander
 }
 
-export type PartialCalendarEvent = Omit<ICalendarEvent, 'metadata' | 'subscriberCount'>;
+export type PartialCalendarEvent = Omit<ICalendarEvent, 'metadata' | 'subscriberCount' | 'getDescription' | 'getLocation'>;
 
 function filterEvent(e: Event) {
   const allProperies = <JCal>e.component.jCal[1];

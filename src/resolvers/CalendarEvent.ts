@@ -22,11 +22,19 @@ export class CalendarEvent {
   @Field(() => String)
   title: string;
 
-  @Field(() => String)
   description: string;
 
-  @Field(() => String)
+  @Field(() => String, { name: 'description' })
+  getDescription() {
+    return this.description || '';
+  }
+
   location: string;
+
+  @Field(() => String, { name: 'location' })
+  getLocation() {
+    return this.location || '';
+  }
 
   @Field(() => GraphQLJSONObject)
   metadata: Record<string, unknown>
